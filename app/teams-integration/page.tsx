@@ -1,11 +1,17 @@
+"use client"
+
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { MessageSquare, Download, ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import SideNavigation from "@/components/side-navigation"
 import TopNavigation from "@/components/top-navigation"
 import SageBaseLogo from "@/components/sagebase-logo"
+import TeamsChatModal from "@/components/teams-chat-modal"
 
 export default function TeamsIntegrationPage() {
+  const [isTeamsChatOpen, setIsTeamsChatOpen] = useState(false)
+
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Left Sidebar */}
@@ -48,7 +54,9 @@ export default function TeamsIntegrationPage() {
                       <Download className="mr-2 h-4 w-4" />
                       Install SageBase App
                     </Button>
-                    <Button variant="outline">View Documentation</Button>
+                    <Button variant="outline" onClick={() => setIsTeamsChatOpen(true)}>
+                      Try Demo
+                    </Button>
                   </div>
                 </div>
                 <div className="md:w-1/2">
@@ -176,14 +184,21 @@ export default function TeamsIntegrationPage() {
                 Install the SageBase app for Microsoft Teams today and give your team instant access to all your company
                 knowledge.
               </p>
-              <Button className="bg-emerald-600 hover:bg-emerald-700">
-                <Download className="mr-2 h-4 w-4" />
-                Install SageBase for Teams
-              </Button>
+              <div className="flex flex-wrap gap-3 justify-center">
+                <Button className="bg-emerald-600 hover:bg-emerald-700">
+                  <Download className="mr-2 h-4 w-4" />
+                  Install SageBase for Teams
+                </Button>
+                <Button variant="outline" onClick={() => setIsTeamsChatOpen(true)}>
+                  Try Demo
+                </Button>
+              </div>
             </div>
           </div>
         </main>
       </div>
+
+      <TeamsChatModal isOpen={isTeamsChatOpen} onClose={() => setIsTeamsChatOpen(false)} />
     </div>
   )
 }

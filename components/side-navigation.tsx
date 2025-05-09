@@ -140,20 +140,6 @@ export default function SideNavigation() {
         },
       ],
     },
-    {
-      id: "pulse",
-      name: "Pulse",
-      color: "bg-purple-100",
-      initial: "P",
-      items: [],
-    },
-    {
-      id: "sentinel",
-      name: "Sentinel",
-      color: "bg-amber-100",
-      initial: "S",
-      items: [],
-    },
   ])
 
   // Add effect to log spaces state changes
@@ -164,6 +150,13 @@ export default function SideNavigation() {
       console.log(`Space ${space.name} has ${space.items.length} items`)
     })
   }, [spaces, updateCounter])
+
+  // Add this useEffect after the existing useEffect for logging
+  useEffect(() => {
+    // This effect will run whenever spaces or expandedSpaces or expandedFolders change
+    // It forces a re-render by updating the counter
+    setUpdateCounter((prev) => prev + 1)
+  }, [spaces, expandedSpaces, expandedFolders])
 
   const handleContextMenu = (
     e: React.MouseEvent,
@@ -255,7 +248,7 @@ export default function SideNavigation() {
     console.log(`Creating document: "${title}" in space: "${parentSpace}", folder: "${parentFolder || "none"}"`)
 
     // Create a deep copy of the spaces array to avoid mutation issues
-    const newSpaces = JSON.parse(JSON.stringify(spaces)) as Space[]
+    const newSpaces = JSON.parse(JSON.stringify(spaces))
 
     // Find the space by name (case-insensitive to be safe)
     const spaceIndex = newSpaces.findIndex((s) => s.name.toLowerCase() === parentSpace.toLowerCase())
@@ -312,7 +305,6 @@ export default function SideNavigation() {
     console.log(`Space has ${newSpaces[spaceIndex].items.length} items after adding`)
 
     // Update the state with the new spaces array
-    console.log("Updating spaces state")
     setSpaces(newSpaces)
 
     // Increment the update counter to force a re-render
@@ -325,9 +317,12 @@ export default function SideNavigation() {
     }
 
     // If document is added to a folder, ensure the folder is expanded
-    if (parentFolder && !expandedFolders.includes(`${parentSpace}-${parentFolder}`)) {
-      console.log(`Expanding folder: ${parentSpace}-${parentFolder}`)
-      setExpandedFolders([...expandedFolders, `${parentSpace}-${parentFolder}`])
+    if (parentFolder) {
+      const folderKey = `${parentSpace}-${parentFolder}`
+      if (!expandedFolders.includes(folderKey)) {
+        console.log(`Expanding folder: ${folderKey}`)
+        setExpandedFolders([...expandedFolders, folderKey])
+      }
     }
 
     // Navigate to the new document
@@ -493,7 +488,7 @@ export default function SideNavigation() {
                 (
                   <ul className="ml-7 mt-1 space-y-1">
                     {space.items.map((item) => (
-                      <li key={`${item.id}-${updateCounter}`}>
+                      <li key={`${space.id}-${item.id}-${updateCounter}`}>
                         {item.type === "folder" ? (
                           <>
                             <div
@@ -517,7 +512,7 @@ export default function SideNavigation() {
                               item.children.length > 0 && (
                                 <ul className="ml-5 mt-1 space-y-1">
                                   {item.children.map((child) => (
-                                    <li key={`${child.id}-${updateCounter}`}>
+                                    <li key={`${space.id}-${item.id}-${child.id}-${updateCounter}`}>
                                       <Link
                                         href={`/editor/${space.id}/${child.id}`}
                                         className="flex items-center text-sm text-gray-600 px-2 py-1 rounded-md hover:bg-gray-200"

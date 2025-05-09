@@ -20,6 +20,64 @@ type ChatInterfaceProps = {
   onClose?: () => void
 }
 
+// Add the chat message styles
+const chatMessageStyles = `
+  .chat-message-content a {
+    color: #10b981;
+    text-decoration: underline;
+    transition: color 0.2s;
+  }
+  
+  .chat-message-content a:hover {
+    color: #059669;
+  }
+  
+  .chat-message-content ul, .chat-message-content ol {
+    margin-left: 1.5rem;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .chat-message-content ul {
+    list-style-type: disc;
+  }
+  
+  .chat-message-content ol {
+    list-style-type: decimal;
+  }
+  
+  .chat-message-content p {
+    margin-bottom: 0.5rem;
+  }
+  
+  .chat-message-content p:last-child {
+    margin-bottom: 0;
+  }
+  
+  .chat-message-content pre {
+    background-color: #f1f1f1;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    overflow-x: auto;
+    margin: 0.5rem 0;
+  }
+  
+  .chat-message-content code {
+    font-family: monospace;
+    background-color: rgba(0, 0, 0, 0.05);
+    padding: 0.1rem 0.2rem;
+    border-radius: 0.2rem;
+  }
+  
+  .chat-message-content div {
+    margin-bottom: 0.5rem;
+  }
+  
+  .chat-message-content div:last-child {
+    margin-bottom: 0;
+  }
+`
+
 export default function ChatInterface({ initialContext, onClose }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -34,6 +92,19 @@ export default function ChatInterface({ initialContext, onClose }: ChatInterface
   const [isExpanded, setIsExpanded] = useState(false)
   const [isMinimized, setIsMinimized] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  // Add this inside the component, after the state declarations
+  useEffect(() => {
+    // Add the styles to the document
+    const styleElement = document.createElement("style")
+    styleElement.innerHTML = chatMessageStyles
+    document.head.appendChild(styleElement)
+
+    // Clean up on unmount
+    return () => {
+      document.head.removeChild(styleElement)
+    }
+  }, [])
 
   // Scroll to bottom whenever messages change
   useEffect(() => {
@@ -55,19 +126,52 @@ export default function ChatInterface({ initialContext, onClose }: ChatInterface
     setInput("")
     setIsLoading(true)
 
-    // Simulate AI response
-    setTimeout(() => {
-      const aiResponse = generateAIResponse(input)
+    try {
+      // Call our API route - same as the Teams chat modal
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          query: input,
+          conversationHistory: messages
+            .slice(-5)
+            .map((msg) => `${msg.role === "user" ? "User" : "Assistant"}: ${msg.content}`)
+            .join("\n\n"),
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`API responded with status: ${response.status}`)
+      }
+
+      const data = await response.json()
+
+      // Add the response to messages
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: aiResponse,
+        content: data.response || "I'm sorry, I couldn't generate a response at this time.",
         role: "assistant",
         timestamp: new Date(),
       }
 
       setMessages((prev) => [...prev, assistantMessage])
+    } catch (error) {
+      console.error("Error generating response:", error)
+
+      // Add a fallback message when the API fails
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        content: "I'm sorry, I encountered an error processing your request. Please try again later.",
+        role: "assistant",
+        timestamp: new Date(),
+      }
+
+      setMessages((prev) => [...prev, errorMessage])
+    } finally {
       setIsLoading(false)
-    }, 1000)
+    }
   }
 
   // Simple mock AI response generator
@@ -141,7 +245,7 @@ export default function ChatInterface({ initialContext, onClose }: ChatInterface
       {/* Chat Messages */}
       {!isMinimized && (
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {messages.map((message) => (
+          {messages.map((message, index) => (
             <div key={message.id} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
               <div className="flex max-w-[80%]">
                 {message.role === "assistant" && (
@@ -151,11 +255,24 @@ export default function ChatInterface({ initialContext, onClose }: ChatInterface
                 )}
                 <div
                   className={`rounded-lg p-3 ${
-                    message.role === "user" ? "bg-emerald-600 text-white" : "bg-gray-100 text-gray-800"
+                    message.role === "user"
+                      ? "bg-emerald-600 text-white"
+                      : index === 0
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-100 text-gray-800"
                   }`}
                 >
-                  <p className="text-sm">{message.content}</p>
-                  <div className={`text-xs mt-1 ${message.role === "user" ? "text-emerald-100" : "text-gray-500"}`}>
+                  <div
+                    className={`text-sm chat-message-content ${
+                      message.role === "user" || index === 0 ? "text-white" : "text-gray-800"
+                    }`}
+                    dangerouslySetInnerHTML={{ __html: message.content }}
+                  />
+                  <div
+                    className={`text-xs mt-1 ${
+                      message.role === "user" ? "text-emerald-100" : index === 0 ? "text-blue-100" : "text-gray-500"
+                    }`}
+                  >
                     {message.timestamp.toLocaleTimeString([], {
                       hour: "2-digit",
                       minute: "2-digit",

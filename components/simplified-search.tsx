@@ -10,6 +10,64 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 
+// Add the chat message styles
+const chatMessageStyles = `
+  .chat-message-content a {
+    color: #10b981;
+    text-decoration: underline;
+    transition: color 0.2s;
+  }
+  
+  .chat-message-content a:hover {
+    color: #059669;
+  }
+  
+  .chat-message-content ul, .chat-message-content ol {
+    margin-left: 1.5rem;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .chat-message-content ul {
+    list-style-type: disc;
+  }
+  
+  .chat-message-content ol {
+    list-style-type: decimal;
+  }
+  
+  .chat-message-content p {
+    margin-bottom: 0.5rem;
+  }
+  
+  .chat-message-content p:last-child {
+    margin-bottom: 0;
+  }
+  
+  .chat-message-content pre {
+    background-color: #f1f1f1;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    overflow-x: auto;
+    margin: 0.5rem 0;
+  }
+  
+  .chat-message-content code {
+    font-family: monospace;
+    background-color: rgba(0, 0, 0, 0.05);
+    padding: 0.1rem 0.2rem;
+    border-radius: 0.2rem;
+  }
+  
+  .chat-message-content div {
+    margin-bottom: 0.5rem;
+  }
+  
+  .chat-message-content div:last-child {
+    margin-bottom: 0;
+  }
+`
+
 export default function SimplifiedSearch() {
   const [searchQuery, setSearchQuery] = useState("")
   const [isSearching, setIsSearching] = useState(false)
@@ -40,6 +98,19 @@ export default function SimplifiedSearch() {
   const [searchResults, setSearchResults] = useState<any[]>([])
   const [aiSummary, setAiSummary] = useState("")
 
+  // Add effect to apply chat message styles
+  useEffect(() => {
+    // Add the styles to the document
+    const styleElement = document.createElement("style")
+    styleElement.innerHTML = chatMessageStyles
+    document.head.appendChild(styleElement)
+
+    // Clean up on unmount
+    return () => {
+      document.head.removeChild(styleElement)
+    }
+  }, [])
+
   // Toggle filter selection
   const toggleFilter = (filterId: string) => {
     if (activeFilters.includes(filterId)) {
@@ -60,21 +131,37 @@ export default function SimplifiedSearch() {
     "CI/CD pipeline setup for Pulse",
   ])
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
     if (!searchQuery.trim()) return
 
     setIsSearching(true)
     setShowHistory(false)
 
-    // Simulate search delay
-    setTimeout(() => {
+    try {
+      // Call our API route directly
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          query: searchQuery,
+          conversationHistory: "",
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`API responded with status: ${response.status}`)
+      }
+
+      const data = await response.json()
+
       // Generate mock results based on the query
       const results = generateMockResults()
       setSearchResults(results)
 
-      // Generate AI summary
-      const summary = generateAiSummary(results, searchQuery)
-      setAiSummary(summary)
+      // Use the API response as the AI summary
+      setAiSummary(data.response || generateAiSummary(results, searchQuery))
 
       setIsSearching(false)
       setShowResults(true)
@@ -87,10 +174,29 @@ export default function SimplifiedSearch() {
           isUser: false,
         },
       ])
-    }, 1000)
+    } catch (error) {
+      console.error("Error in search:", error)
+
+      // Fallback to local generation if API fails
+      const results = generateMockResults()
+      setSearchResults(results)
+      setAiSummary(generateAiSummary(results, searchQuery))
+
+      setIsSearching(false)
+      setShowResults(true)
+      setShowChat(true)
+
+      setChatMessages([
+        {
+          text: `SageBase found an answer to your question about "${searchQuery}". Is there anything specific you'd like explained further?`,
+          isUser: false,
+        },
+      ])
+    }
   }
 
-  const handleChatSubmit = (e: React.FormEvent) => {
+  // Replace the existing handleChatSubmit function with this one:
+  const handleChatSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!chatInput.trim()) return
 
@@ -102,17 +208,49 @@ export default function SimplifiedSearch() {
     // Show AI is typing
     setIsTyping(true)
 
-    // Simulate AI response after a delay
-    setTimeout(() => {
+    try {
+      // Call our API route - same as the Teams chat modal
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          query: userQuestion,
+          conversationHistory: chatMessages
+            .map((msg) => `${msg.isUser ? "User" : "Assistant"}: ${msg.text}`)
+            .join("\n\n"),
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`API responded with status: ${response.status}`)
+      }
+
+      const data = await response.json()
+
+      // Add the response to messages
       setChatMessages((prev) => [
         ...prev,
         {
-          text: generateAiResponse(userQuestion),
+          text: data.response || "I'm sorry, I couldn't generate a response at this time.",
           isUser: false,
         },
       ])
+    } catch (error) {
+      console.error("Error generating response:", error)
+
+      // Add a fallback message when the API fails
+      setChatMessages((prev) => [
+        ...prev,
+        {
+          text: "I'm sorry, I encountered an error processing your request. Please try again later.",
+          isUser: false,
+        },
+      ])
+    } finally {
       setIsTyping(false)
-    }, 1500)
+    }
   }
 
   const handleHistoryItemClick = (query: string) => {
@@ -289,11 +427,39 @@ export default function SimplifiedSearch() {
   // Generate AI response for chat
   const generateAiResponse = (question: string) => {
     if (question.toLowerCase().includes("token") || question.toLowerCase().includes("jwt")) {
-      return "JWT tokens are generated using the jsonwebtoken library with a 1-hour expiration. The tokens must be included in the Authorization header of all API requests. The current implementation has some performance issues with token validation that the team is working to address."
+      return `<div>
+      <p>JWT tokens are generated using the jsonwebtoken library with a 1-hour expiration. The tokens must be included in the Authorization header of all API requests.</p>
+      <p>The current implementation has some performance issues with token validation that the team is working to address:</p>
+      <ul>
+        <li>High CPU usage during validation</li>
+        <li>Occasional timeouts with high traffic</li>
+        <li>No proper refresh mechanism</li>
+      </ul>
+      <p>You can find more details in the <a href="#">Authentication Service Documentation</a>.</p>
+    </div>`
     } else if (question.toLowerCase().includes("timeline") || question.toLowerCase().includes("deadline")) {
-      return "According to the latest information, the OAuth implementation needs to be completed by the end of Q2 to align with the security roadmap. The refresh token mechanism is being prioritized based on the architecture review discussions."
+      return `<div>
+      <p>According to the latest information, the OAuth implementation needs to be completed by the end of Q2 to align with the security roadmap.</p>
+      <p>Key milestones:</p>
+      <ul>
+        <li><strong>April 15:</strong> Design review completed</li>
+        <li><strong>May 30:</strong> Implementation of refresh token mechanism</li>
+        <li><strong>June 15:</strong> Testing and QA</li>
+        <li><strong>June 30:</strong> Production deployment</li>
+      </ul>
+      <p>The refresh token mechanism is being prioritized based on the architecture review discussions.</p>
+    </div>`
     } else {
-      return "Based on the search results, I can see that this relates to the authentication system using OAuth 2.0 and JWT tokens. There are ongoing efforts to improve the token refresh mechanism. Can you specify what aspect you'd like to know more about?"
+      return `<div>
+      <p>Based on the search results, I can see that this relates to the authentication system using OAuth 2.0 and JWT tokens. There are ongoing efforts to improve the token refresh mechanism.</p>
+      <p>The system currently:</p>
+      <ul>
+        <li>Uses OAuth 2.0 for authentication</li>
+        <li>Implements JWT tokens with 1-hour expiration</li>
+        <li>Requires tokens in the Authorization header</li>
+      </ul>
+      <p>Can you specify what aspect you'd like to know more about?</p>
+    </div>`
     }
   }
 
@@ -457,10 +623,19 @@ export default function SimplifiedSearch() {
                   )}
                   <div
                     className={`rounded-lg p-3 ${
-                      message.isUser ? "bg-emerald-600 text-white" : "bg-gray-100 text-gray-800"
+                      message.isUser
+                        ? "bg-emerald-600 text-white"
+                        : index === 0
+                          ? "bg-blue-500 text-white"
+                          : "bg-gray-100 text-gray-800"
                     }`}
                   >
-                    <p className="text-sm">{message.text}</p>
+                    <div
+                      className={`text-sm chat-message-content ${
+                        message.isUser || (index === 0 && !message.isUser) ? "text-white" : "text-gray-800"
+                      }`}
+                      dangerouslySetInnerHTML={{ __html: message.text }}
+                    />
                   </div>
                 </div>
               </div>

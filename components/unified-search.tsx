@@ -36,22 +36,48 @@ export default function UnifiedSearch() {
   const [isSearching, setIsSearching] = useState(false)
   const [showChat, setShowChat] = useState(false)
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
     if (!searchQuery.trim()) return
 
     setIsSearching(true)
 
-    // Simulate search results after a delay
-    setTimeout(() => {
+    try {
+      // Call our API route directly
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          query: searchQuery,
+          conversationHistory: "",
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`API responded with status: ${response.status}`)
+      }
+
+      const data = await response.json()
+
+      // Generate mock results
       const mockResults = generateMockResults()
       setSearchResults(mockResults)
 
-      // Generate AI summary
-      const summary = generateAiSummary(mockResults, searchQuery)
-      setAiSummary(summary)
+      // Use the API response as the AI summary
+      setAiSummary(data.response || generateAiSummary(mockResults, searchQuery))
 
       setIsSearching(false)
-    }, 1500)
+    } catch (error) {
+      console.error("Error in search:", error)
+
+      // Fallback to local generation if API fails
+      const mockResults = generateMockResults()
+      setSearchResults(mockResults)
+      setAiSummary(generateAiSummary(mockResults, searchQuery))
+
+      setIsSearching(false)
+    }
   }
 
   const toggleFilter = (filter: string) => {
