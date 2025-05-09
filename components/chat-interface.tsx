@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Avatar } from "@/components/ui/avatar"
 import { Sparkles, Send, X, Maximize2, Minimize2, ChevronDown, ChevronUp } from "lucide-react"
 import SageBaseLogo from "./sagebase-logo"
+import HtmlResponse from "./html-response"
 
 type Message = {
   id: string
@@ -254,8 +255,12 @@ export default function ChatInterface({ initialContext, onClose }: ChatInterface
                     className={`text-sm chat-message-content ${
                       message.role === "user" || index === 0 ? "text-white" : "text-gray-800"
                     }`}
-                    dangerouslySetInnerHTML={{ __html: message.content }}
-                  />
+                  >
+                    <HtmlResponse
+                      content={message.content}
+                      className={message.role === "user" || index === 0 ? "text-white" : "text-gray-800"}
+                    />
+                  </div>
                   <div
                     className={`text-xs mt-1 ${
                       message.role === "user" ? "text-emerald-100" : index === 0 ? "text-blue-100" : "text-gray-500"

@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { Avatar } from "@/components/ui/avatar"
 import SageBaseLogo from "./sagebase-logo"
+import HtmlResponse from "./html-response"
 
 // Add the chat message styles
 const chatMessageStyles = `
@@ -132,6 +133,7 @@ export default function SimplifiedSearch() {
     "CI/CD pipeline setup for Pulse",
   ])
 
+  // Modified handleSearch function
   const handleSearch = async () => {
     if (!searchQuery.trim()) return
 
@@ -491,6 +493,7 @@ export default function SimplifiedSearch() {
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
       {/* Search Input */}
       <div className="p-4 border-b border-gray-200">
+        {/* ... existing search input code ... */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
           <Input
@@ -523,27 +526,7 @@ export default function SimplifiedSearch() {
           )}
         </div>
 
-        {/* Search History Dropdown */}
-        {showHistory && searchHistory.length > 0 && !showResults && (
-          <div
-            ref={historyRef}
-            className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-80 overflow-y-auto"
-          >
-            <ul className="py-1">
-              {searchHistory.map((query, index) => (
-                <li
-                  key={index}
-                  className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center"
-                  onClick={() => handleHistoryItemClick(query)}
-                >
-                  <Search className="h-4 w-4 text-gray-400 mr-2" />
-                  <span className="text-gray-700">{query}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
+        {/* ... existing filter code ... */}
         {/* Platform Filters */}
         {!showResults && (
           <div className="flex items-center space-x-3 mt-4">
@@ -578,12 +561,12 @@ export default function SimplifiedSearch() {
         </div>
       )}
 
-      {/* Search Results */}
+      {/* Search Results - Updated to use HtmlResponse */}
       {showResults && !isSearching && (
         <div ref={resultsRef} className="p-4">
-          {/* AI Summary */}
+          {/* AI Summary - Now using HtmlResponse component */}
           <div className="bg-white border border-gray-200 rounded-lg p-4 mb-4">
-            <p className="text-gray-700">{aiSummary}</p>
+            <HtmlResponse content={aiSummary} className="text-gray-700" />
           </div>
 
           {/* References */}
@@ -609,7 +592,7 @@ export default function SimplifiedSearch() {
         </div>
       )}
 
-      {/* Chat Interface */}
+      {/* Chat Interface - Updated to use HtmlResponse */}
       {showChat && (
         <div className="border-t border-gray-200 p-4">
           {/* Chat Messages */}
@@ -635,8 +618,12 @@ export default function SimplifiedSearch() {
                       className={`text-sm chat-message-content ${
                         message.isUser || (index === 0 && !message.isUser) ? "text-white" : "text-gray-800"
                       }`}
-                      dangerouslySetInnerHTML={{ __html: message.text }}
-                    />
+                    >
+                      <HtmlResponse
+                        content={message.text}
+                        className={message.isUser || (index === 0 && !message.isUser) ? "text-white" : "text-gray-800"}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>

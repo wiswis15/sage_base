@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { X, Send, Paperclip, Smile, Maximize2, Minimize2, MessageSquare } from "lucide-react"
 import SageBaseLogo from "./sagebase-logo"
+import HtmlResponse from "./html-response"
 
 // Add this style block right before the TeamsChatModal component definition
 const chatMessageStyles = `
@@ -304,8 +305,16 @@ You can <a href="#" class="text-[#464775] underline hover:text-[#5b5c8d]">view t
                         ? "text-white"
                         : "text-gray-800"
                     }`}
-                    dangerouslySetInnerHTML={{ __html: message.content }}
-                  />
+                  >
+                    <HtmlResponse
+                      content={message.content}
+                      className={
+                        message.role === "user" || (index === 0 && message.role === "assistant")
+                          ? "text-white"
+                          : "text-gray-800"
+                      }
+                    />
+                  </div>
                   <div
                     className={`text-xs mt-1 ${
                       message.role === "user" ? "text-white/70" : index === 0 ? "text-blue-100" : "text-gray-500"
