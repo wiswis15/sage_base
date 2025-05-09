@@ -8,7 +8,8 @@ import { Search, Database, FileText, MessageSquare, Code, Mail, X, Send } from "
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar } from "@/components/ui/avatar"
+import SageBaseLogo from "./sagebase-logo"
 
 // Add the chat message styles
 const chatMessageStyles = `
@@ -617,8 +618,8 @@ export default function SimplifiedSearch() {
               <div key={index} className={`flex ${message.isUser ? "justify-end" : "justify-start"}`}>
                 <div className="flex max-w-[80%]">
                   {!message.isUser && (
-                    <Avatar className="h-8 w-8 mr-2 mt-1">
-                      <AvatarFallback className="bg-emerald-100 text-emerald-600">SB</AvatarFallback>
+                    <Avatar className="h-8 w-8 mr-2 mt-1 bg-emerald-100">
+                      <SageBaseLogo size={20} className="text-emerald-600" variant="icon" />
                     </Avatar>
                   )}
                   <div
@@ -643,8 +644,8 @@ export default function SimplifiedSearch() {
             {isTyping && (
               <div className="flex justify-start">
                 <div className="flex">
-                  <Avatar className="h-8 w-8 mr-2">
-                    <AvatarFallback className="bg-emerald-100 text-emerald-600">SB</AvatarFallback>
+                  <Avatar className="h-8 w-8 mr-2 bg-emerald-100">
+                    <SageBaseLogo size={20} className="text-emerald-600" variant="icon" />
                   </Avatar>
                   <div className="bg-gray-100 rounded-lg p-3 flex items-center">
                     <div className="flex space-x-1">

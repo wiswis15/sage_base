@@ -5,8 +5,9 @@ import type React from "react"
 import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar } from "@/components/ui/avatar"
 import { Sparkles, Send, X, Maximize2, Minimize2, ChevronDown, ChevronUp } from "lucide-react"
+import SageBaseLogo from "./sagebase-logo"
 
 type Message = {
   id: string
@@ -174,19 +175,6 @@ export default function ChatInterface({ initialContext, onClose }: ChatInterface
     }
   }
 
-  // Simple mock AI response generator
-  const generateAIResponse = (query: string): string => {
-    if (query.toLowerCase().includes("authentication") || query.toLowerCase().includes("auth")) {
-      return "The authentication system uses OAuth 2.0 with JWT tokens. The tokens expire after 1 hour, and there's an ongoing project (AUTH-245) to implement a refresh mechanism. Would you like more details about a specific aspect of the authentication flow?"
-    } else if (query.toLowerCase().includes("token") || query.toLowerCase().includes("jwt")) {
-      return "JWT tokens are generated using the jsonwebtoken library with a 1-hour expiration. The tokens must be included in the Authorization header of all API requests. The current implementation has some performance issues with token validation that the team is working to address."
-    } else if (query.toLowerCase().includes("timeline") || query.toLowerCase().includes("deadline")) {
-      return "According to the latest information, the OAuth implementation needs to be completed by the end of Q2 to align with the security roadmap. The refresh token mechanism is being prioritized based on the architecture review discussions."
-    } else {
-      return "Based on the search results, I can see that this relates to the authentication system using OAuth 2.0 and JWT tokens. There are ongoing efforts to improve the token refresh mechanism. Can you specify what aspect you'd like to know more about?"
-    }
-  }
-
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault()
@@ -249,8 +237,8 @@ export default function ChatInterface({ initialContext, onClose }: ChatInterface
             <div key={message.id} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
               <div className="flex max-w-[80%]">
                 {message.role === "assistant" && (
-                  <Avatar className="h-8 w-8 mr-2 mt-1">
-                    <AvatarFallback className="bg-emerald-100 text-emerald-600">SB</AvatarFallback>
+                  <Avatar className="h-8 w-8 mr-2 mt-1 bg-emerald-100">
+                    <SageBaseLogo size={20} className="text-emerald-600" variant="icon" />
                   </Avatar>
                 )}
                 <div
@@ -285,8 +273,8 @@ export default function ChatInterface({ initialContext, onClose }: ChatInterface
           {isLoading && (
             <div className="flex justify-start">
               <div className="flex">
-                <Avatar className="h-8 w-8 mr-2">
-                  <AvatarFallback className="bg-emerald-100 text-emerald-600">SB</AvatarFallback>
+                <Avatar className="h-8 w-8 mr-2 bg-emerald-100">
+                  <SageBaseLogo size={20} className="text-emerald-600" variant="icon" />
                 </Avatar>
                 <div className="bg-gray-100 rounded-lg p-3 flex items-center">
                   <div className="flex space-x-1">

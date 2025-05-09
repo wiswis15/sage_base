@@ -401,10 +401,10 @@ export default function SideNavigation() {
   return (
     <div className="w-56 bg-gray-100 border-r border-gray-200 flex flex-col h-full">
       <div className="p-3">
-        <Button variant="outline" className="w-full justify-start">
+        <Link href="/" className="flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-gray-100 cursor-pointer">
           <Home className="mr-2 h-4 w-4" />
           Home
-        </Button>
+        </Link>
       </div>
 
       <div className="px-3 py-2">

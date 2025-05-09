@@ -285,8 +285,8 @@ You can <a href="#" class="text-[#464775] underline hover:text-[#5b5c8d]">view t
             <div key={message.id} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
               <div className="flex max-w-[70%]">
                 {message.role === "assistant" && (
-                  <Avatar className="h-8 w-8 mr-2 mt-1">
-                    <AvatarFallback className="bg-emerald-100 text-emerald-600">SB</AvatarFallback>
+                  <Avatar className="h-8 w-8 mr-2 mt-1 bg-emerald-100">
+                    <SageBaseLogo size={20} className="text-emerald-600" variant="icon" />
                   </Avatar>
                 )}
                 <div
@@ -328,8 +328,8 @@ You can <a href="#" class="text-[#464775] underline hover:text-[#5b5c8d]">view t
           {isTyping && (
             <div className="flex justify-start">
               <div className="flex">
-                <Avatar className="h-8 w-8 mr-2">
-                  <AvatarFallback className="bg-emerald-100 text-emerald-600">SB</AvatarFallback>
+                <Avatar className="h-8 w-8 mr-2 bg-emerald-100">
+                  <SageBaseLogo size={20} className="text-emerald-600" variant="icon" />
                 </Avatar>
                 <div className="bg-white rounded-lg p-3 shadow-sm flex items-center">
                   <div className="flex space-x-1">
