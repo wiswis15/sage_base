@@ -143,11 +143,14 @@ export default function SimplifiedSearch() {
     "How to update the software of my device CHR2?",
     "How does the authentication service work?",
     "What is the token refresh mechanism?",
+    "How to implement OAuth in Atlas API?",
+    "What's the recommended way to handle error responses?",
   ]
 
   // Mock question suggestions based on input
   const getSuggestions = (input: string): string[] => {
-    if (!input.trim()) return []
+    // If there's no input, return all default suggestions
+    if (!input.trim()) return defaultSuggestions
 
     const lowercaseInput = input.toLowerCase()
 
@@ -328,20 +331,22 @@ export default function SimplifiedSearch() {
   // Close history dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        historyRef.current &&
-        !historyRef.current.contains(event.target as Node) &&
-        suggestionsRef.current &&
-        !suggestionsRef.current.contains(event.target as Node) &&
-        searchInputRef.current &&
-        !searchInputRef.current.contains(event.target as Node)
-      ) {
-        setShowHistory(false)
+      // Check if the click target is not part of the search input or suggestions
+      const target = event.target as Node
+      const isOutsideSearchInput = searchInputRef.current && !searchInputRef.current.contains(target)
+      const isOutsideSuggestions = suggestionsRef.current && !suggestionsRef.current.contains(target)
+
+      // If clicking outside both elements, hide the suggestions
+      if (isOutsideSearchInput && isOutsideSuggestions) {
         setShowSuggestions(false)
+        setShowHistory(false)
       }
     }
 
+    // Add the event listener to the document
     document.addEventListener("mousedown", handleClickOutside)
+
+    // Clean up the event listener when the component unmounts
     return () => {
       document.removeEventListener("mousedown", handleClickOutside)
     }
@@ -352,8 +357,8 @@ export default function SimplifiedSearch() {
     const value = e.target.value
     setSearchQuery(value)
 
-    // Only show suggestions if there's text in the input and we have matching suggestions
-    if (value.trim() !== "" && filteredSuggestions.length > 0) {
+    // Show suggestions regardless of input, as long as we have suggestions to show
+    if (getSuggestions(value).length > 0) {
       setShowSuggestions(true)
       setShowHistory(false)
     } else {
@@ -554,6 +559,13 @@ export default function SimplifiedSearch() {
     return source === "teams" ? "Microsoft Teams" : source.charAt(0).toUpperCase() + source.slice(1)
   }
 
+  // Show suggestions when the search input is focused
+  useEffect(() => {
+    if (isFocused && !showResults && !isSearching) {
+      setShowSuggestions(true)
+    }
+  }, [isFocused, showResults, isSearching])
+
   return (
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm max-h-[80vh] overflow-auto">
       {/* Search Input */}
@@ -569,8 +581,13 @@ export default function SimplifiedSearch() {
             value={searchQuery}
             onChange={handleInputChange}
             onKeyDown={(e) => e.key === "Enter" && !showResults && handleSearch()}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setTimeout(() => setIsFocused(false), 200)}
+            onFocus={() => {
+              setIsFocused(true)
+              // Only show suggestions if we're not already showing results
+              if (!showResults && !isSearching) {
+                setShowSuggestions(true)
+              }
+            }}
             readOnly={showResults}
           />
           {searchQuery && !showResults && (
