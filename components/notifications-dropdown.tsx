@@ -18,16 +18,18 @@ type Notification = {
 
 export default function NotificationsDropdown() {
   const [isOpen, setIsOpen] = useState(false)
+  // Update the first notification in the notifications state array to be about a document update
+  // and keep the rest of the notifications as they are
+
   const [notifications, setNotifications] = useState<Notification[]>([
     {
       id: "1",
-      type: "alert",
-      title: "Unanswered Question Alert",
-      message: "How to implement rate limiting in the Atlas API?",
+      type: "info",
+      title: "Document Update Detected",
+      message: "SageBase detected a possible update for the document designDocument_project1",
       time: "2 hours ago",
       read: false,
-      actionUrl: "/questions/5",
-      count: 5,
+      actionUrl: "/documents/5",
     },
     {
       id: "2",
@@ -155,16 +157,35 @@ export default function NotificationsDropdown() {
                             Has been asked {notification.count} times this week with no answer
                           </p>
                         )}
+                        {/* Replace the notification actions section with this updated version */}
+                        {/* Look for the part that renders the buttons at the bottom of each notification */}
                         <div className="flex items-center justify-between mt-2">
-                          <Link href={notification.actionUrl || "#"}>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="text-xs h-7 px-2 text-emerald-600 border-emerald-200 hover:bg-emerald-50"
-                            >
-                              View Details
-                            </Button>
-                          </Link>
+                          <div className="flex space-x-2">
+                            <Link href={notification.actionUrl || "#"}>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-xs h-7 px-2 text-emerald-600 border-emerald-200 hover:bg-emerald-50"
+                              >
+                                View Details
+                              </Button>
+                            </Link>
+                            {notification.type === "info" && notification.title === "Document Update Detected" && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-xs h-7 px-2 text-blue-600 border-blue-200 hover:bg-blue-50"
+                                onClick={() => {
+                                  markAsRead(notification.id)
+                                  // Here you would typically call a function to approve the update
+                                  // For now, we'll just show an alert
+                                  alert("Update approved!")
+                                }}
+                              >
+                                Approve
+                              </Button>
+                            )}
+                          </div>
                           {!notification.read && (
                             <Button
                               variant="ghost"
