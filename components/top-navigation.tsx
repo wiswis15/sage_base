@@ -20,7 +20,7 @@ export default function TopNavigation() {
         <div className="flex items-center justify-between px-4 py-2">
           <div className="flex items-center space-x-4">
             <Link href="/" className="flex items-center">
-              <SageBaseLogo size={32} showTagline={true} />
+              <SageBaseLogo size={32} />
             </Link>
             <nav className="flex items-center space-x-1">
               <Link href="/" passHref>

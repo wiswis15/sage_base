@@ -2,15 +2,9 @@ interface SageBaseLogoProps {
   className?: string
   size?: number
   variant?: "full" | "icon" | "text"
-  showTagline?: boolean
 }
 
-export default function SageBaseLogo({
-  className = "",
-  size = 40,
-  variant = "full",
-  showTagline = false,
-}: SageBaseLogoProps) {
+export default function SageBaseLogo({ className = "", size = 40, variant = "full" }: SageBaseLogoProps) {
   const iconOnly = variant === "icon"
   const textOnly = variant === "text"
 
@@ -55,18 +49,11 @@ export default function SageBaseLogo({
       )}
 
       {!iconOnly && (
-        <div className="ml-2 flex flex-col">
-          <div className="font-bold text-emerald-600 flex items-center">
-            <span style={{ fontSize: size * 0.5 }}>Sage</span>
-            <span style={{ fontSize: size * 0.5 }} className="text-gray-700">
-              Base
-            </span>
-          </div>
-          {showTagline && (
-            <span className="font-medium text-gray-700" style={{ fontSize: size * 0.35, marginTop: "2px" }}>
-              your living knowledge Base
-            </span>
-          )}
+        <div className="ml-2 font-bold text-emerald-600 flex items-center">
+          <span style={{ fontSize: size * 0.5 }}>Sage</span>
+          <span style={{ fontSize: size * 0.5 }} className="text-gray-700">
+            Base
+          </span>
         </div>
       )}
     </div>
