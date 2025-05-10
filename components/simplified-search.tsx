@@ -144,15 +144,13 @@ export default function SimplifiedSearch() {
 
     const lowercaseInput = input.toLowerCase()
 
+    // IMPORTANT: This is the updated suggestions list with the CHR2 question at the top
     const suggestions = [
-       "How to update the firmware of the verizon device CHR2?",
+      "How to update the software of my device CHR2?",
       "How does the authentication service work?",
       "What is the token refresh mechanism?",
       "How to implement OAuth in our services?",
-      "What are the API rate limits?",
-      "How to debug WebSocket connections?",
-      "What is the error handling strategy?"
-   
+      "How to handle token expiration?",
     ]
 
     return suggestions.filter((suggestion) => suggestion.toLowerCase().includes(lowercaseInput)).slice(0, 5) // Return top 5 matches
