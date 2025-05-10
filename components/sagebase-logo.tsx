@@ -63,8 +63,8 @@ export default function SageBaseLogo({
             </span>
           </div>
           {showTagline && (
-            <span className="text-xs text-gray-500" style={{ fontSize: size * 0.25 }}>
-              your living knowledge Base
+            <span className="font-medium text-gray-600" style={{ fontSize: size * 0.3 }}>
+              your smart knowledge Base
             </span>
           )}
         </div>
