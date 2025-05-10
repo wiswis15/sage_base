@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState, useEffect, useRef } from "react"
 import { Input } from "@/components/ui/input"
-import { Search, Database, FileText, MessageSquare, Code, Mail, X, Send } from "lucide-react"
+import { Search, Database, FileText, MessageSquare, Code, Mail, X, Send, Clock } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
@@ -75,6 +75,7 @@ export default function SimplifiedSearch() {
   const [isSearching, setIsSearching] = useState(false)
   const [isFocused, setIsFocused] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
+  const [showSuggestions, setShowSuggestions] = useState(false)
   const [showResults, setShowResults] = useState(false)
   const [showChat, setShowChat] = useState(false)
   const [chatMessages, setChatMessages] = useState<{ text: string; isUser: boolean }[]>([])
@@ -82,6 +83,7 @@ export default function SimplifiedSearch() {
   const [isTyping, setIsTyping] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const historyRef = useRef<HTMLDivElement>(null)
+  const suggestionsRef = useRef<HTMLDivElement>(null)
   const resultsRef = useRef<HTMLDivElement>(null)
   const chatInputRef = useRef<HTMLInputElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -99,6 +101,9 @@ export default function SimplifiedSearch() {
   // Mock search results
   const [searchResults, setSearchResults] = useState<any[]>([])
   const [aiSummary, setAiSummary] = useState("")
+
+  // Add a new state for tracking progress:
+  const [loadingProgress, setLoadingProgress] = useState(0)
 
   // Add effect to apply chat message styles
   useEffect(() => {
@@ -133,12 +138,50 @@ export default function SimplifiedSearch() {
     "CI/CD pipeline setup for Pulse",
   ])
 
+  // Mock question suggestions based on input
+  const getSuggestions = (input: string): string[] => {
+    if (!input.trim()) return []
+
+    const lowercaseInput = input.toLowerCase()
+
+    const suggestions = [
+     "How i update the firmware of verizon chr2 device?",
+      "How does the authentication service work?",
+      "What is the token refresh mechanism?",
+      "How to implement OAuth in our services?",
+      "How to handle token expiration?",
+      "What are the current authentication issues?",
+      "How to optimize API performance?",
+      "What is the deployment process?",
+      "How to implement role-based access control?",
+    ]
+
+    return suggestions.filter((suggestion) => suggestion.toLowerCase().includes(lowercaseInput)).slice(0, 5) // Return top 5 matches
+  }
+
+  // Get filtered suggestions based on current input
+  const filteredSuggestions = getSuggestions(searchQuery)
+
   // Modified handleSearch function
   const handleSearch = async () => {
     if (!searchQuery.trim()) return
 
     setIsSearching(true)
     setShowHistory(false)
+    setShowSuggestions(false)
+
+    // Reset and start progress animation
+    setLoadingProgress(0)
+    const progressInterval = setInterval(() => {
+      setLoadingProgress((prev) => {
+        // Simulate progress up to 90% - the last 10% will complete when data is received
+        if (prev >= 90) {
+          clearInterval(progressInterval)
+          return 90
+        }
+        return prev + Math.random() * 10
+      })
+    }, 300)
 
     try {
       // Call our API route directly
@@ -166,35 +209,48 @@ export default function SimplifiedSearch() {
       // Use the API response as the AI summary
       setAiSummary(data.response || generateAiSummary(results, searchQuery))
 
-      setIsSearching(false)
-      setShowResults(true)
-      setShowChat(true)
+      // Complete the progress bar
+      setLoadingProgress(100)
+      clearInterval(progressInterval)
 
-      // Add initial AI message to chat
-      setChatMessages([
-        {
-          text: `SageBase found an answer to your question about "${searchQuery}". Is there anything specific you'd like explained further?`,
-          isUser: false,
-        },
-      ])
+      // Short delay to show the completed progress bar before showing results
+      setTimeout(() => {
+        setIsSearching(false)
+        setShowResults(true)
+        setShowChat(true)
+
+        // Add initial AI message to chat
+        setChatMessages([
+          {
+            text: `SageBase found an answer to your question about "${searchQuery}". Is there anything specific you'd like explained further?`,
+            isUser: false,
+          },
+        ])
+      }, 500)
     } catch (error) {
       console.error("Error in search:", error)
 
-      // Fallback to local generation if API fails
-      const results = generateMockResults()
-      setSearchResults(results)
-      setAiSummary(generateAiSummary(results, searchQuery))
+      // Complete the progress bar even on error
+      setLoadingProgress(100)
+      clearInterval(progressInterval)
 
-      setIsSearching(false)
-      setShowResults(true)
-      setShowChat(true)
+      setTimeout(() => {
+        // Fallback to local generation if API fails
+        const results = generateMockResults()
+        setSearchResults(results)
+        setAiSummary(generateAiSummary(results, searchQuery))
 
-      setChatMessages([
-        {
-          text: `SageBase found an answer to your question about "${searchQuery}". Is there anything specific you'd like explained further?`,
-          isUser: false,
-        },
-      ])
+        setIsSearching(false)
+        setShowResults(true)
+        setShowChat(true)
+
+        setChatMessages([
+          {
+            text: `SageBase found an answer to your question about "${searchQuery}". Is there anything specific you'd like explained further?`,
+            isUser: false,
+          },
+        ])
+      }, 500)
     }
   }
 
@@ -259,6 +315,17 @@ export default function SimplifiedSearch() {
   const handleHistoryItemClick = (query: string) => {
     setSearchQuery(query)
     setShowHistory(false)
+    setShowSuggestions(false)
+    if (searchInputRef.current) {
+      searchInputRef.current.focus()
+    }
+    // Trigger search immediately
+    setTimeout(() => handleSearch(), 100)
+  }
+
+  const handleSuggestionClick = (suggestion: string) => {
+    setSearchQuery(suggestion)
+    setShowSuggestions(false)
     if (searchInputRef.current) {
       searchInputRef.current.focus()
     }
@@ -277,10 +344,13 @@ export default function SimplifiedSearch() {
       if (
         historyRef.current &&
         !historyRef.current.contains(event.target as Node) &&
+        suggestionsRef.current &&
+        !suggestionsRef.current.contains(event.target as Node) &&
         searchInputRef.current &&
         !searchInputRef.current.contains(event.target as Node)
       ) {
         setShowHistory(false)
+        setShowSuggestions(false)
       }
     }
 
@@ -290,12 +360,38 @@ export default function SimplifiedSearch() {
     }
   }, [])
 
-  // Show history when input is focused and has content
+  // Show history or suggestions when input is focused
   useEffect(() => {
     if (isFocused && !showResults) {
-      setShowHistory(true)
+      if (searchQuery.trim() === "") {
+        setShowHistory(true)
+        setShowSuggestions(false)
+      } else if (filteredSuggestions.length > 0) {
+        setShowSuggestions(true)
+        setShowHistory(false)
+      } else {
+        setShowSuggestions(false)
+        setShowHistory(true)
+      }
     }
-  }, [isFocused, searchQuery, showResults])
+  }, [isFocused, searchQuery, showResults, filteredSuggestions])
+
+  // Handle input changes
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setSearchQuery(value)
+
+    if (value.trim() === "") {
+      setShowSuggestions(false)
+      setShowHistory(true)
+    } else if (filteredSuggestions.length > 0) {
+      setShowSuggestions(true)
+      setShowHistory(false)
+    } else {
+      setShowSuggestions(false)
+      setShowHistory(false)
+    }
+  }
 
   // Reset search
   const resetSearch = () => {
@@ -490,7 +586,7 @@ export default function SimplifiedSearch() {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+    <div className="bg-white rounded-xl border border-gray-200 shadow-sm max-h-[80vh] overflow-auto">
       {/* Search Input */}
       <div className="p-4 border-b border-gray-200">
         {/* ... existing search input code ... */}
@@ -500,13 +596,13 @@ export default function SimplifiedSearch() {
             ref={searchInputRef}
             type="search"
             placeholder="Ask anything..."
-            className="pl-10 pr-10 py-6 text-lg border-gray-300 w-full"
+            className={`pl-10 pr-10 py-6 text-lg border-gray-300 w-full ${showResults ? "bg-gray-50" : ""}`}
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+            onChange={handleInputChange}
+            onKeyDown={(e) => e.key === "Enter" && !showResults && handleSearch()}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setTimeout(() => setIsFocused(false), 200)}
-            disabled={isSearching || showResults}
+            readOnly={showResults}
           />
           {searchQuery && !showResults && (
             <button
@@ -525,6 +621,49 @@ export default function SimplifiedSearch() {
             </button>
           )}
         </div>
+
+        {/* Question Suggestions Dropdown */}
+        {showSuggestions && filteredSuggestions.length > 0 && !showResults && (
+          <div
+            ref={suggestionsRef}
+            className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-80 overflow-y-auto"
+          >
+            <ul className="py-1">
+              {filteredSuggestions.map((suggestion, index) => (
+                <li
+                  key={index}
+                  className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center"
+                  onClick={() => handleSuggestionClick(suggestion)}
+                >
+                  <Search className="h-4 w-4 text-emerald-500 mr-2" />
+                  <span className="text-gray-700">{suggestion}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Search History Dropdown */}
+        {showHistory && searchHistory.length > 0 && !showResults && !showSuggestions && (
+          <div
+            ref={historyRef}
+            className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-80 overflow-y-auto"
+          >
+            <div className="px-4 py-2 text-sm font-medium text-gray-500 border-b border-gray-100">Recent searches</div>
+            <ul className="py-1">
+              {searchHistory.map((query, index) => (
+                <li
+                  key={index}
+                  className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center"
+                  onClick={() => handleHistoryItemClick(query)}
+                >
+                  <Clock className="h-4 w-4 text-gray-400 mr-2" />
+                  <span className="text-gray-700">{query}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         {/* ... existing filter code ... */}
         {/* Platform Filters */}
@@ -552,25 +691,42 @@ export default function SimplifiedSearch() {
 
       {/* Loading State */}
       {isSearching && (
-        <div className="flex justify-center py-8">
-          <div className="animate-pulse flex space-x-4">
-            <div className="h-3 w-3 bg-emerald-400 rounded-full"></div>
-            <div className="h-3 w-3 bg-emerald-400 rounded-full"></div>
-            <div className="h-3 w-3 bg-emerald-400 rounded-full"></div>
+        <div className="p-8">
+          <div className="mb-4 text-center">
+            <p className="text-gray-700 mb-2">Searching for "{searchQuery}"</p>
+            <p className="text-sm text-gray-500">Analyzing documents across platforms...</p>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2.5 mb-4">
+            <div
+              className="bg-emerald-500 h-2.5 rounded-full transition-all duration-300 ease-out"
+              style={{ width: `${loadingProgress}%` }}
+            ></div>
+          </div>
+          <div className="flex justify-center items-center space-x-2 text-xs text-gray-500">
+            {loadingProgress < 30 && <p>Finding relevant documents...</p>}
+            {loadingProgress >= 30 && loadingProgress < 60 && <p>Analyzing content...</p>}
+            {loadingProgress >= 60 && loadingProgress < 90 && <p>Generating response...</p>}
+            {loadingProgress >= 90 && <p>Almost ready...</p>}
           </div>
         </div>
       )}
 
       {/* Search Results - Updated to use HtmlResponse */}
       {showResults && !isSearching && (
-        <div ref={resultsRef} className="p-4">
+        <div ref={resultsRef} className="max-h-[60vh] overflow-y-auto">
+          {/* Question Label - Make it sticky */}
+          <div className="sticky top-0 bg-white border-b border-gray-200 p-4 z-10 shadow-sm">
+            <div className="text-sm font-medium text-gray-500 mb-1">Your question:</div>
+            <div className="text-base font-medium text-gray-800">{searchQuery}</div>
+          </div>
+
           {/* AI Summary - Now using HtmlResponse component */}
-          <div className="bg-white border border-gray-200 rounded-lg p-4 mb-4">
+          <div className="bg-white border border-gray-200 rounded-lg p-4 mb-4 mt-2 mx-4">
             <HtmlResponse content={aiSummary} className="text-gray-700" />
           </div>
 
           {/* References */}
-          <div className="mb-4">
+          <div className="mb-4 px-4">
             <h3 className="text-sm font-medium text-gray-500 mb-3">References:</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
               {searchResults

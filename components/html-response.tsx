@@ -10,15 +10,23 @@ interface HtmlResponseProps {
 export default function HtmlResponse({ content, className = "" }: HtmlResponseProps) {
   const containerRef = useRef<HTMLDivElement>(null)
 
+  // This effect can be used to initialize any interactive elements in the HTML content
   useEffect(() => {
-    // Apply any necessary initialization for interactive elements
-    if (containerRef.current) {
-      // You could initialize any interactive elements here if needed
-      // For example, syntax highlighting, tooltips, etc.
-    }
+    // For example, if we need to add syntax highlighting or other interactive features
+    // to the rendered HTML content, we can do it here
   }, [content])
 
+  // If content is empty, don't render anything
+  if (!content) return null
+
+  // If content doesn't have HTML tags, wrap it in paragraph tags
+  const htmlContent = content.includes("<") ? content : `<p>${content}</p>`
+
   return (
-    <div ref={containerRef} className={`html-response ${className}`} dangerouslySetInnerHTML={{ __html: content }} />
+    <div
+      ref={containerRef}
+      className={`html-response ${className}`}
+      dangerouslySetInnerHTML={{ __html: htmlContent }}
+    />
   )
 }
