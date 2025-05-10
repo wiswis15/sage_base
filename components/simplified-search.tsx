@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState, useEffect, useRef } from "react"
 import { Input } from "@/components/ui/input"
-import { Search, Database, FileText, MessageSquare, Code, Mail, X, Send, Clock } from "lucide-react"
+import { Search, Database, FileText, MessageSquare, Code, Mail, X, Send } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
@@ -138,26 +138,33 @@ export default function SimplifiedSearch() {
     "CI/CD pipeline setup for Pulse",
   ])
 
+  // Fixed list of suggested questions that will always be shown
+  const defaultSuggestions = [
+    "How to update the software of my device CHR2?",
+    "How does the authentication service work?",
+    "What is the token refresh mechanism?",
+  ]
+
   // Mock question suggestions based on input
   const getSuggestions = (input: string): string[] => {
-    if (!input.trim()) return []
+    if (!input.trim()) return defaultSuggestions
 
     const lowercaseInput = input.toLowerCase()
 
-    // IMPORTANT: This is the updated suggestions list with the CHR2 question at the top
-    const suggestions = [
-      "How to update the software of my device CHR2?",
-      "How does the authentication service work?",
-      "What is the token refresh mechanism?",
-      "How to implement OAuth in our services?",
-      "How to handle token expiration?",
-    ]
-
-    return suggestions.filter((suggestion) => suggestion.toLowerCase().includes(lowercaseInput)).slice(0, 5) // Return top 5 matches
+    // Filter the default suggestions based on the input
+    return defaultSuggestions.filter((suggestion) => suggestion.toLowerCase().includes(lowercaseInput))
   }
 
   // Get filtered suggestions based on current input
   const filteredSuggestions = getSuggestions(searchQuery)
+
+  // Show suggestions dropdown even when input is empty
+  useEffect(() => {
+    if (isFocused && !showResults) {
+      setShowSuggestions(true)
+      setShowHistory(false)
+    }
+  }, [isFocused, showResults])
 
   // Modified handleSearch function
   const handleSearch = async () => {
@@ -216,13 +223,8 @@ export default function SimplifiedSearch() {
         setShowResults(true)
         setShowChat(true)
 
-        // Add initial AI message to chat
-        setChatMessages([
-          {
-            text: `SageBase found an answer to your question about "${searchQuery}". Is there anything specific you'd like explained further?`,
-            isUser: false,
-          },
-        ])
+        // Removed the initial AI message - let the user start the conversation
+        setChatMessages([])
       }, 500)
     } catch (error) {
       console.error("Error in search:", error)
@@ -241,12 +243,8 @@ export default function SimplifiedSearch() {
         setShowResults(true)
         setShowChat(true)
 
-        setChatMessages([
-          {
-            text: `SageBase found an answer to your question about "${searchQuery}". Is there anything specific you'd like explained further?`,
-            isUser: false,
-          },
-        ])
+        // Removed the initial AI message - let the user start the conversation
+        setChatMessages([])
       }, 500)
     }
   }
@@ -357,31 +355,12 @@ export default function SimplifiedSearch() {
     }
   }, [])
 
-  // Show history or suggestions when input is focused
-  useEffect(() => {
-    if (isFocused && !showResults) {
-      if (searchQuery.trim() === "") {
-        setShowHistory(true)
-        setShowSuggestions(false)
-      } else if (filteredSuggestions.length > 0) {
-        setShowSuggestions(true)
-        setShowHistory(false)
-      } else {
-        setShowSuggestions(false)
-        setShowHistory(true)
-      }
-    }
-  }, [isFocused, searchQuery, showResults, filteredSuggestions])
-
   // Handle input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
     setSearchQuery(value)
 
-    if (value.trim() === "") {
-      setShowSuggestions(false)
-      setShowHistory(true)
-    } else if (filteredSuggestions.length > 0) {
+    if (filteredSuggestions.length > 0) {
       setShowSuggestions(true)
       setShowHistory(false)
     } else {
@@ -619,12 +598,15 @@ export default function SimplifiedSearch() {
           )}
         </div>
 
-        {/* Question Suggestions Dropdown */}
-        {showSuggestions && filteredSuggestions.length > 0 && !showResults && (
+        {/* Question Suggestions Dropdown - Always show the fixed list of questions */}
+        {showSuggestions && !showResults && (
           <div
             ref={suggestionsRef}
             className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-80 overflow-y-auto"
           >
+            <div className="px-4 py-2 text-sm font-medium text-gray-500 border-b border-gray-100">
+              Suggested questions
+            </div>
             <ul className="py-1">
               {filteredSuggestions.map((suggestion, index) => (
                 <li
@@ -640,29 +622,6 @@ export default function SimplifiedSearch() {
           </div>
         )}
 
-        {/* Search History Dropdown */}
-        {showHistory && searchHistory.length > 0 && !showResults && !showSuggestions && (
-          <div
-            ref={historyRef}
-            className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-80 overflow-y-auto"
-          >
-            <div className="px-4 py-2 text-sm font-medium text-gray-500 border-b border-gray-100">Recent searches</div>
-            <ul className="py-1">
-              {searchHistory.map((query, index) => (
-                <li
-                  key={index}
-                  className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center"
-                  onClick={() => handleHistoryItemClick(query)}
-                >
-                  <Clock className="h-4 w-4 text-gray-400 mr-2" />
-                  <span className="text-gray-700">{query}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {/* ... existing filter code ... */}
         {/* Platform Filters */}
         {!showResults && (
           <div className="flex items-center space-x-3 mt-4">
@@ -750,6 +709,11 @@ export default function SimplifiedSearch() {
         <div className="border-t border-gray-200 p-4">
           {/* Chat Messages */}
           <div className="max-h-60 overflow-y-auto mb-4 space-y-4">
+            {chatMessages.length === 0 && (
+              <div className="text-center text-gray-500 text-sm py-4">
+                Ask a follow-up question about your search results
+              </div>
+            )}
             {chatMessages.map((message, index) => (
               <div key={index} className={`flex ${message.isUser ? "justify-end" : "justify-start"}`}>
                 <div className="flex max-w-[80%]">
@@ -760,21 +724,13 @@ export default function SimplifiedSearch() {
                   )}
                   <div
                     className={`rounded-lg p-3 ${
-                      message.isUser
-                        ? "bg-emerald-600 text-white"
-                        : index === 0
-                          ? "bg-blue-500 text-white"
-                          : "bg-gray-100 text-gray-800"
+                      message.isUser ? "bg-emerald-600 text-white" : "bg-gray-100 text-gray-800"
                     }`}
                   >
-                    <div
-                      className={`text-sm chat-message-content ${
-                        message.isUser || (index === 0 && !message.isUser) ? "text-white" : "text-gray-800"
-                      }`}
-                    >
+                    <div className={`text-sm chat-message-content ${message.isUser ? "text-white" : "text-gray-800"}`}>
                       <HtmlResponse
                         content={message.text}
-                        className={message.isUser || (index === 0 && !message.isUser) ? "text-white" : "text-gray-800"}
+                        className={message.isUser ? "text-white" : "text-gray-800"}
                       />
                     </div>
                   </div>
@@ -823,7 +779,7 @@ export default function SimplifiedSearch() {
       )}
 
       {/* Empty State */}
-      {!showResults && !isSearching && (
+      {!showResults && !isSearching && !showSuggestions && (
         <div className="text-center py-8 px-4 text-gray-500">
           <p className="text-lg font-medium text-gray-700 mb-2">
             {activeFilters.length === platforms.length
