@@ -147,9 +147,7 @@ export default function SimplifiedSearch() {
 
   // Mock question suggestions based on input
   const getSuggestions = (input: string): string[] => {
-    // Always return the default suggestions, regardless of input
-    // If there's input, filter them
-    if (!input.trim()) return defaultSuggestions
+    if (!input.trim()) return []
 
     const lowercaseInput = input.toLowerCase()
 
@@ -159,14 +157,6 @@ export default function SimplifiedSearch() {
 
   // Get filtered suggestions based on current input
   const filteredSuggestions = getSuggestions(searchQuery)
-
-  // Show suggestions dropdown when input is focused
-  useEffect(() => {
-    if (isFocused && !showResults) {
-      setShowSuggestions(true)
-      setShowHistory(false)
-    }
-  }, [isFocused, showResults])
 
   // Modified handleSearch function
   const handleSearch = async () => {
@@ -338,23 +328,20 @@ export default function SimplifiedSearch() {
   // Close history dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      // Check if the click was outside both the search input and suggestions dropdown
       if (
-        searchInputRef.current &&
-        !searchInputRef.current.contains(event.target as Node) &&
+        historyRef.current &&
+        !historyRef.current.contains(event.target as Node) &&
         suggestionsRef.current &&
-        !suggestionsRef.current.contains(event.target as Node)
+        !suggestionsRef.current.contains(event.target as Node) &&
+        searchInputRef.current &&
+        !searchInputRef.current.contains(event.target as Node)
       ) {
-        // Close the suggestions
-        setShowSuggestions(false)
         setShowHistory(false)
+        setShowSuggestions(false)
       }
     }
 
-    // Add the event listener
     document.addEventListener("mousedown", handleClickOutside)
-
-    // Clean up the event listener
     return () => {
       document.removeEventListener("mousedown", handleClickOutside)
     }
@@ -365,9 +352,14 @@ export default function SimplifiedSearch() {
     const value = e.target.value
     setSearchQuery(value)
 
-    // Always show suggestions when input is focused
-    setShowSuggestions(true)
-    setShowHistory(false)
+    // Only show suggestions if there's text in the input and we have matching suggestions
+    if (value.trim() !== "" && filteredSuggestions.length > 0) {
+      setShowSuggestions(true)
+      setShowHistory(false)
+    } else {
+      setShowSuggestions(false)
+      setShowHistory(false)
+    }
   }
 
   // Reset search
@@ -578,7 +570,7 @@ export default function SimplifiedSearch() {
             onChange={handleInputChange}
             onKeyDown={(e) => e.key === "Enter" && !showResults && handleSearch()}
             onFocus={() => setIsFocused(true)}
-            onBlur={() => setTimeout(() => setIsFocused(false), 100)}
+            onBlur={() => setTimeout(() => setIsFocused(false), 200)}
             readOnly={showResults}
           />
           {searchQuery && !showResults && (
@@ -599,8 +591,8 @@ export default function SimplifiedSearch() {
           )}
         </div>
 
-        {/* Question Suggestions Dropdown - Show when input is focused */}
-        {showSuggestions && !showResults && (
+        {/* Question Suggestions Dropdown - Only show when typing */}
+        {showSuggestions && !showResults && filteredSuggestions.length > 0 && (
           <div
             ref={suggestionsRef}
             className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-80 overflow-y-auto"

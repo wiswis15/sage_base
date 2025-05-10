@@ -17,7 +17,6 @@ import {
   Save,
   ArrowLeft,
   Zap,
-  MessageSquare,
 } from "lucide-react"
 import SideNavigation from "@/components/side-navigation"
 
@@ -27,9 +26,6 @@ export default function NewDocumentPage() {
   const [space, setSpace] = useState("")
   const [isGenerating, setIsGenerating] = useState(false)
   const [aiSuggestions, setAiSuggestions] = useState<string[]>([])
-  const [showAICoWriter, setShowAICoWriter] = useState(true)
-  const [aiCoWriterSuggestions, setAiCoWriterSuggestions] = useState<string[]>([])
-  const [isTyping, setIsTyping] = useState(false)
 
   const generateWithAI = () => {
     setIsGenerating(true)
@@ -51,101 +47,6 @@ export default function NewDocumentPage() {
     // For this demo, we'll just append the suggestion as a heading
     setContent((prev) => `${prev}\n\n## ${suggestion}\n\nContent for this section goes here...`)
     setAiSuggestions([])
-  }
-
-  const simulateAICoWriter = (text: string) => {
-    // Only show suggestions if there's content and the feature is enabled
-    if (text.length > 10 && showAICoWriter) {
-      setIsTyping(true)
-
-      // Simulate AI thinking
-      setTimeout(() => {
-        setIsTyping(false)
-
-        // Generate contextual suggestions based on content
-        if (text.toLowerCase().includes("authentication") || text.toLowerCase().includes("auth")) {
-          setAiCoWriterSuggestions([
-            "Add a section explaining authentication methods",
-            "Describe the authentication flow with a sequence diagram",
-            "Include code example for user authentication",
-          ])
-        } else if (text.toLowerCase().includes("api") || text.toLowerCase().includes("endpoint")) {
-          setAiCoWriterSuggestions([
-            "List all available API endpoints in a table",
-            "Add request/response examples for each endpoint",
-            "Include error handling guidelines",
-          ])
-        } else {
-          setAiCoWriterSuggestions([
-            "Expand on this section with more details",
-            "Add a diagram to visualize this concept",
-            "Include a code example to demonstrate implementation",
-          ])
-        }
-      }, 1000)
-    } else {
-      setAiCoWriterSuggestions([])
-    }
-  }
-
-  const getAIGeneratedContent = (suggestion: string) => {
-    // In a real app, this would call an AI service
-    // For demo, return static content based on suggestion type
-    if (suggestion.includes("authentication methods")) {
-      return `Common Authentication Methods:
-1. API Keys - Simple string tokens included in request headers
-2. OAuth 2.0 - Industry-standard protocol for authorization
-3. Session-based Authentication - Uses cookies to maintain state
-4. Basic Authentication - Username/password encoded in headers
-5. Multi-factor Authentication - Combines multiple verification methods
-
-Each method has different security implications and use cases.`
-    } else if (suggestion.includes("diagram")) {
-      return `Sequence Diagram:
-1. Client sends credentials to /auth endpoint
-2. Server validates credentials
-3. Server generates JWT token
-4. Token is returned to client
-5. Client stores token
-6. Client includes token in Authorization header for subsequent requests
-7. Server validates token for each request`
-    } else if (suggestion.includes("code example")) {
-      return `\`\`\`typescript
-// Basic authentication middleware
-function authenticate(req, res, next) {
-  const authHeader = req.headers.authorization;
-  
-  if (!authHeader || !authHeader.startsWith('Basic ')) {
-    return res.status(401).json({ message: 'Unauthorized' });
-  }
-  
-  // Decode the Base64 encoded credentials
-  const base64Credentials = authHeader.split(' ')[1];
-  const credentials = Buffer.from(base64Credentials, 'base64').toString('ascii');
-  const [username, password] = credentials.split(':');
-  
-  // Validate credentials (in a real app, check against database)
-  if (validateCredentials(username, password)) {
-    req.user = { username };
-    next();
-  } else {
-    return res.status(401).json({ message: 'Invalid credentials' });
-  }
-}
-
-function validateCredentials(username, password) {
-  // In a real app, validate against database
-  return username === 'admin' && password === 'password';
-}
-\`\`\``
-    } else {
-      return `This section needs more detailed explanation. Consider adding:
-- Background information
-- Step-by-step instructions
-- Examples of usage
-- Common pitfalls and how to avoid them
-- References to related documentation`
-    }
   }
 
   return (
@@ -262,94 +163,13 @@ function validateCredentials(username, password) {
                 </div>
               </div>
 
-              {/* AI Co-Writer Feature Banner */}
-              <div className="bg-blue-50 border border-blue-100 rounded-t-lg p-3 flex items-start space-x-3">
-                <div className="bg-blue-100 rounded-full p-1.5 mt-0.5">
-                  <Sparkles className="h-4 w-4 text-blue-600" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-medium text-blue-700">AI Co-Writer Enabled</h3>
-                  <p className="text-xs text-blue-600 mt-0.5">
-                    The AI suggests content, autocompletes steps, and helps explain things more clearly—based on your
-                    project's real context. It's like having a smart co-writer built into your editor.
-                  </p>
-                  <div className="mt-2 flex items-center">
-                    <button
-                      onClick={() => setShowAICoWriter(!showAICoWriter)}
-                      className="text-xs bg-white border border-blue-200 text-blue-600 px-2 py-1 rounded hover:bg-blue-50"
-                    >
-                      {showAICoWriter ? "Disable" : "Enable"} AI Co-Writer
-                    </button>
-                  </div>
-                </div>
-              </div>
-
               {/* Editor Content */}
               <Textarea
                 value={content}
-                onChange={(e) => {
-                  setContent(e.target.value)
-                  simulateAICoWriter(e.target.value)
-                }}
+                onChange={(e) => setContent(e.target.value)}
                 className="min-h-[400px] border-t-0 rounded-t-none focus-visible:ring-0 focus-visible:border-emerald-500"
                 placeholder="Start writing or use AI to generate content..."
               />
-
-              {/* AI Co-Writer Typing Indicator */}
-              {isTyping && showAICoWriter && (
-                <div className="mt-2 p-2 border border-blue-100 rounded-lg bg-blue-50">
-                  <div className="flex items-center">
-                    <MessageSquare className="h-4 w-4 text-blue-500 mr-2" />
-                    <span className="text-blue-700 text-sm font-medium">AI is analyzing your document...</span>
-                  </div>
-                  <div className="mt-1 flex space-x-2">
-                    <div className="h-1.5 w-1.5 bg-blue-400 rounded-full animate-pulse"></div>
-                    <div className="h-1.5 w-1.5 bg-blue-400 rounded-full animate-pulse delay-100"></div>
-                    <div className="h-1.5 w-1.5 bg-blue-400 rounded-full animate-pulse delay-200"></div>
-                  </div>
-                </div>
-              )}
-
-              {/* AI Co-Writer Suggestions */}
-              {aiCoWriterSuggestions.length > 0 && showAICoWriter && (
-                <div className="mt-2 p-3 border border-blue-100 rounded-lg bg-blue-50">
-                  <div className="flex items-center mb-2">
-                    <Sparkles className="h-4 w-4 text-blue-500 mr-2" />
-                    <span className="text-blue-700 text-sm font-medium">AI Co-Writer Suggestions</span>
-                  </div>
-                  <div className="space-y-2">
-                    {aiCoWriterSuggestions.map((suggestion, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between bg-white p-2 rounded border border-blue-100"
-                      >
-                        <span className="text-gray-700 text-sm">{suggestion}</span>
-                        <div className="flex space-x-1">
-                          <button
-                            onClick={() => {
-                              setContent((prev) => `${prev}\n\n${suggestion}:\n`)
-                              setAiCoWriterSuggestions([])
-                            }}
-                            className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
-                          >
-                            Insert
-                          </button>
-                          <button
-                            onClick={() => {
-                              // Generate full content for this suggestion
-                              setContent((prev) => `${prev}\n\n${suggestion}:\n${getAIGeneratedContent(suggestion)}`)
-                              setAiCoWriterSuggestions([])
-                            }}
-                            className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-                          >
-                            Write for me
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
 
               {/* AI Suggestions */}
               {isGenerating && (

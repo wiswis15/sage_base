@@ -18,18 +18,25 @@ type Notification = {
 
 export default function NotificationsDropdown() {
   const [isOpen, setIsOpen] = useState(false)
-  // Update the first notification in the notifications state array to be about a document update
-  // and keep the rest of the notifications as they are
-
   const [notifications, setNotifications] = useState<Notification[]>([
     {
-      id: "1",
+      id: "3",
       type: "info",
-      title: "Document Update Detected",
-      message: "SageBase detected a possible update for the document designDocument_project1",
+      title: "Document's automatic update Notification",
+      message: "Authentication Service Architecture.md was updated automatically",
+      time: "Yesterday",
+      read: true,
+      actionUrl: "/documents/1",
+    },
+    {
+      id: "1",
+      type: "alert",
+      title: "Unanswered Question Alert",
+      message: "How to implement rate limiting in the Atlas API?",
       time: "2 hours ago",
       read: false,
-      actionUrl: "/documents/5",
+      actionUrl: "/questions/5",
+      count: 5,
     },
     {
       id: "2",
@@ -40,15 +47,6 @@ export default function NotificationsDropdown() {
       read: false,
       actionUrl: "/questions/7",
       count: 3,
-    },
-    {
-      id: "3",
-      type: "info",
-      title: "Documentation Updated",
-      message: "Authentication Service Architecture was updated by Michael Chen",
-      time: "Yesterday",
-      read: true,
-      actionUrl: "/documents/1",
     },
     {
       id: "4",
@@ -85,6 +83,13 @@ export default function NotificationsDropdown() {
 
   const markAllAsRead = () => {
     setNotifications(notifications.map((notification) => ({ ...notification, read: true })))
+  }
+
+  const approveUpdate = (id: string) => {
+    // In a real app, this would call an API to approve the update
+    console.log(`Approved update with id: ${id}`)
+    // Remove the notification after approval
+    setNotifications(notifications.filter((notification) => notification.id !== id))
   }
 
   const getNotificationIcon = (type: string) => {
@@ -157,8 +162,6 @@ export default function NotificationsDropdown() {
                             Has been asked {notification.count} times this week with no answer
                           </p>
                         )}
-                        {/* Replace the notification actions section with this updated version */}
-                        {/* Look for the part that renders the buttons at the bottom of each notification */}
                         <div className="flex items-center justify-between mt-2">
                           <div className="flex space-x-2">
                             <Link href={notification.actionUrl || "#"}>
@@ -170,17 +173,12 @@ export default function NotificationsDropdown() {
                                 View Details
                               </Button>
                             </Link>
-                            {notification.type === "info" && notification.title === "Document Update Detected" && (
+                            {notification.title.includes("automatic update") && (
                               <Button
                                 variant="outline"
                                 size="sm"
+                                onClick={() => approveUpdate(notification.id)}
                                 className="text-xs h-7 px-2 text-blue-600 border-blue-200 hover:bg-blue-50"
-                                onClick={() => {
-                                  markAsRead(notification.id)
-                                  // Here you would typically call a function to approve the update
-                                  // For now, we'll just show an alert
-                                  alert("Update approved!")
-                                }}
                               >
                                 Approve
                               </Button>
