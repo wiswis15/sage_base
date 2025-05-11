@@ -26,7 +26,7 @@ export default function InsightsWidget() {
         </div>
         <div className="bg-gray-50 rounded-lg p-3">
           <div className="text-sm text-gray-500 mb-1">Unanswered Questions</div>
-          <div className="text-2xl font-bold text-amber-600">23</div>
+          <div className="text-2xl font-bold text-red-600">23</div>
           <div className="text-xs text-gray-500 mt-1">In the last 24 hours</div>
         </div>
       </div>

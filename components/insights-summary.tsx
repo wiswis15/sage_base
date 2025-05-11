@@ -26,7 +26,7 @@ export default function InsightsSummary() {
         <div>
           <h4 className="text-sm text-gray-500 mb-1">Unanswered Questions</h4>
           <div className="flex items-baseline">
-            <span className="text-3xl font-bold text-amber-600">23</span>
+            <span className="text-3xl font-bold text-red-600">23</span>
             <span className="ml-2 text-sm text-gray-500">In the last 24 hours</span>
           </div>
         </div>

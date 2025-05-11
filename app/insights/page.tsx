@@ -61,7 +61,7 @@ export default function InsightsPage() {
               </div>
               <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
                 <div className="text-sm text-gray-500 mb-1">Unanswered Questions</div>
-                <div className="text-3xl font-bold text-amber-600">23</div>
+                <div className="text-3xl font-bold text-red-600">23</div>
                 <div className="text-sm text-gray-500 mt-1">In the last 24 hours</div>
               </div>
               <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
