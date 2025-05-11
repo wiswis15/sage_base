@@ -17,7 +17,7 @@ https://www.loom.com/share/0235fa1825f443dc9ddcc23ce76b924d?sid=1c633878-08ca-43
 
 ## Features
 
-- Unified search across multiple platforms (Confluence, Jira, Slack, Teams, GitHub, Email)
+- Unified search across multiple platforms (Confluence, Jira, Slack, Teams, GitHub, Email...)
 - AI-powered responses using OpenAI models
 - Interactive chat interface for follow-up questions
 - Filtering by information source
