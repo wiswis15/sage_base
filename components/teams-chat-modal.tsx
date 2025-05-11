@@ -168,7 +168,7 @@ You can <a href="#" class="text-[#464775] underline hover:text-[#5b5c8d]">view t
       // Fallback response in case of error
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: "I'm sorry, I encountered an error processing your request. Please try again later.",
+        content: "<div><p>I'm sorry, I encountered an error processing your request. Please try again later.</p></div>",
         role: "assistant",
         timestamp: new Date(),
       }
@@ -180,13 +180,14 @@ You can <a href="#" class="text-[#464775] underline hover:text-[#5b5c8d]">view t
 
   // Function to call OpenAI API via our API route
   const callOpenAI = async (query: string, messageHistory: Message[]) => {
-    // Format the conversation history for the prompt
-    const recentMessages = messageHistory.slice(-5)
-    const conversationHistory = recentMessages
-      .map((msg) => `${msg.role === "user" ? "User" : "Assistant"}: ${msg.content}`)
-      .join("\n\n")
-
     try {
+      // Format the conversation history for the prompt
+      // Only include the last 3 messages to keep the context smaller
+      const recentMessages = messageHistory.slice(-3)
+      const conversationHistory = recentMessages
+        .map((msg) => `${msg.role === "user" ? "User" : "Assistant"}: ${msg.content}`)
+        .join("\n\n")
+
       // Call our API route
       const response = await fetch("/api/chat", {
         method: "POST",
@@ -205,33 +206,37 @@ You can <a href="#" class="text-[#464775] underline hover:text-[#5b5c8d]">view t
 
       const data = await response.json()
 
+      if (data.error) {
+        throw new Error(data.error)
+      }
+
       // Add the response to messages
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: data.response || "I'm sorry, I couldn't generate a response at this time.",
+        content: data.response || "<div><p>I'm sorry, I couldn't generate a response at this time.</p></div>",
         role: "assistant",
         timestamp: new Date(),
       }
 
       // If the response doesn't already have HTML formatting, wrap it in paragraph tags
       if (data.response && !data.response.includes("<")) {
-        assistantMessage.content = `<p>${data.response}</p>`
+        assistantMessage.content = `<div><p>${data.response}</p></div>`
       }
 
       setMessages((prev) => [...prev, assistantMessage])
-      setIsTyping(false)
     } catch (error) {
       console.error("API error:", error)
 
       // Add a fallback message when the API fails
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: "I'm sorry, I encountered an error processing your request. Please try again later.",
+        content: "<div><p>I'm sorry, I encountered an error processing your request. Please try again later.</p></div>",
         role: "assistant",
         timestamp: new Date(),
       }
 
       setMessages((prev) => [...prev, errorMessage])
+    } finally {
       setIsTyping(false)
     }
   }
