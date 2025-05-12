@@ -4,28 +4,14 @@ import type React from "react"
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import {
-  Home,
-  FileText,
-  Users,
-  Settings,
-  PlusCircle,
-  ChevronRight,
-  ChevronDown,
-  File,
-  Folder,
-  X,
-  Database,
-  MessageSquare,
-  Code,
-  Mail,
-} from "lucide-react"
+import { Home, Users, Settings, PlusCircle, ChevronRight, ChevronDown, File, Folder, X } from "lucide-react"
 import Link from "next/link"
 import ContextMenu from "./context-menu"
 import AddDocumentModal from "./add-document-modal"
 import { useRouter } from "next/navigation"
 import { Input } from "@/components/ui/input"
-
+import { CollapsiblePlatforms } from "./collapsible-platforms"
+import { CollapsibleAIAgents } from "./collapsible-ai-agents"
 type SpaceItem = {
   id: string
   name: string
@@ -200,7 +186,6 @@ export default function SideNavigation() {
   const [showAddSpaceModal, setShowAddSpaceModal] = useState(false)
   const [newSpaceName, setNewSpaceName] = useState("")
   const [newSpaceColor, setNewSpaceColor] = useState("bg-blue-100")
-  const [showPlatformsModal, setShowPlatformsModal] = useState(false)
 
   const handleAddSpace = () => {
     setShowAddSpaceModal(true)
@@ -408,50 +393,11 @@ export default function SideNavigation() {
       </div>
 
       <div className="px-3 py-2">
-        <div className="flex items-center justify-between text-xs font-medium text-gray-500 mb-2">
-          <span>CONNECTED PLATFORMS</span>
-          <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => setShowPlatformsModal(true)}>
-            <PlusCircle className="h-4 w-4" />
-          </Button>
-        </div>
-        <ul className="space-y-1">
-          <li>
-            <div className="flex items-center text-sm text-gray-700 px-2 py-1.5 rounded-md">
-              <Database className="mr-2 h-4 w-4 text-emerald-500" />
-              Confluence
-            </div>
-          </li>
-          <li>
-            <div className="flex items-center text-sm text-gray-700 px-2 py-1.5 rounded-md">
-              <FileText className="mr-2 h-4 w-4 text-blue-500" />
-              Jira
-            </div>
-          </li>
-          <li>
-            <div className="flex items-center text-sm text-gray-700 px-2 py-1.5 rounded-md">
-              <MessageSquare className="mr-2 h-4 w-4 text-purple-500" />
-              Slack
-            </div>
-          </li>
-          <li>
-            <div className="flex items-center text-sm text-gray-700 px-2 py-1.5 rounded-md">
-              <MessageSquare className="mr-2 h-4 w-4 text-blue-600" />
-              Teams
-            </div>
-          </li>
-          <li>
-            <div className="flex items-center text-sm text-gray-700 px-2 py-1.5 rounded-md">
-              <Code className="mr-2 h-4 w-4 text-gray-700" />
-              GitHub
-            </div>
-          </li>
-          <li>
-            <div className="flex items-center text-sm text-gray-700 px-2 py-1.5 rounded-md">
-              <Mail className="mr-2 h-4 w-4 text-red-500" />
-              Email
-            </div>
-          </li>
-        </ul>
+        {/* Replace the old platforms section with the new collapsible component */}
+        <CollapsiblePlatforms />
+
+        {/* Add the new AI Agents section */}
+        <CollapsibleAIAgents />
       </div>
 
       <div className="px-3 py-2 flex-1 overflow-auto">
@@ -674,94 +620,6 @@ export default function SideNavigation() {
                 </Button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-      {showPlatformsModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg w-full max-w-md">
-            <div className="flex items-center justify-between p-4 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-800">Add Platform Connection</h2>
-              <Button variant="ghost" size="icon" onClick={() => setShowPlatformsModal(false)} className="h-8 w-8">
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-
-            <div className="p-4 max-h-[60vh] overflow-y-auto">
-              <div className="space-y-4">
-                <div className="border rounded-md">
-                  <div className="p-4 border-b bg-gray-50">
-                    <h3 className="font-medium">Documentation Platforms</h3>
-                  </div>
-                  <div className="divide-y">
-                    <div className="p-3 flex items-center justify-between hover:bg-gray-50">
-                      <div className="flex items-center">
-                        <Database className="h-4 w-4 text-emerald-500 mr-2" />
-                        <span className="font-medium">Notion</span>
-                      </div>
-                      <Button size="sm">Connect</Button>
-                    </div>
-                    <div className="p-3 flex items-center justify-between hover:bg-gray-50">
-                      <div className="flex items-center">
-                        <Database className="h-4 w-4 text-blue-500 mr-2" />
-                        <span className="font-medium">Nuclino</span>
-                      </div>
-                      <Button size="sm">Connect</Button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="border rounded-md">
-                  <div className="p-4 border-b bg-gray-50">
-                    <h3 className="font-medium">Communication Platforms</h3>
-                  </div>
-                  <div className="divide-y">
-                    <div className="p-3 flex items-center justify-between hover:bg-gray-50">
-                      <div className="flex items-center">
-                        <MessageSquare className="h-4 w-4 text-green-500 mr-2" />
-                        <span className="font-medium">Discord</span>
-                      </div>
-                      <Button size="sm">Connect</Button>
-                    </div>
-                    <div className="p-3 flex items-center justify-between hover:bg-gray-50">
-                      <div className="flex items-center">
-                        <MessageSquare className="h-4 w-4 text-orange-500 mr-2" />
-                        <span className="font-medium">Google Chat</span>
-                      </div>
-                      <Button size="sm">Connect</Button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="border rounded-md">
-                  <div className="p-4 border-b bg-gray-50">
-                    <h3 className="font-medium">Code Platforms</h3>
-                  </div>
-                  <div className="divide-y">
-                    <div className="p-3 flex items-center justify-between hover:bg-gray-50">
-                      <div className="flex items-center">
-                        <Code className="h-4 w-4 text-blue-500 mr-2" />
-                        <span className="font-medium">GitLab</span>
-                      </div>
-                      <Button size="sm">Connect</Button>
-                    </div>
-                    <div className="p-3 flex items-center justify-between hover:bg-gray-50">
-                      <div className="flex items-center">
-                        <Code className="h-4 w-4 text-purple-500 mr-2" />
-                        <span className="font-medium">Bitbucket</span>
-                      </div>
-                      <Button size="sm">Connect</Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex justify-end p-4 border-t border-gray-200">
-              <Button variant="outline" onClick={() => setShowPlatformsModal(false)}>
-                Done
-              </Button>
-            </div>
           </div>
         </div>
       )}

@@ -2,8 +2,8 @@
 
 import type React from "react"
 
-import { useState } from "react"
-import { Database, FileText, MessageSquare, Code, Mail, Plus } from "lucide-react"
+import { useState, useEffect } from "react"
+import { Database, FileText, MessageSquare, Code, Mail, Plus, ChevronRight, ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -17,6 +17,8 @@ type Platform = {
 }
 
 export default function ConnectedPlatforms() {
+  // Initialize with collapsed state
+  const [isExpanded, setIsExpanded] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [platforms, setPlatforms] = useState<Platform[]>([
     {
@@ -48,18 +50,18 @@ export default function ConnectedPlatforms() {
       category: "communication",
     },
     {
-      id: "email",
-      name: "Email",
-      icon: <Mail className="h-4 w-4 text-red-500" />,
-      connected: true,
-      category: "communication",
-    },
-    {
       id: "github",
       name: "GitHub",
       icon: <Code className="h-4 w-4 text-gray-700" />,
       connected: true,
       category: "code",
+    },
+    {
+      id: "email",
+      name: "Email",
+      icon: <Mail className="h-4 w-4 text-red-500" />,
+      connected: true,
+      category: "communication",
     },
 
     // Documentation tools
@@ -123,6 +125,11 @@ export default function ConnectedPlatforms() {
     },
   ])
 
+  // Log the expanded state to verify it's changing
+  useEffect(() => {
+    console.log("Connected Platforms expanded:", isExpanded)
+  }, [isExpanded])
+
   const toggleConnection = (platformId: string) => {
     setPlatforms(
       platforms.map((platform) =>
@@ -131,43 +138,66 @@ export default function ConnectedPlatforms() {
     )
   }
 
+  const toggleExpanded = () => {
+    setIsExpanded((prev) => !prev)
+  }
+
   const connectedPlatforms = platforms.filter((platform) => platform.connected)
 
   return (
     <>
-      <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-6 border border-emerald-100 shadow-sm">
-        <div className="flex items-center justify-between mb-4">
+      <div className="mb-6">
+        {/* Header - Always visible and clickable */}
+        <div
+          className="flex items-center justify-between py-2 px-3 cursor-pointer hover:bg-gray-100/50 rounded-md transition-colors group"
+          onClick={toggleExpanded}
+          role="button"
+          aria-expanded={isExpanded}
+          aria-controls="connected-platforms-content"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault()
+              toggleExpanded()
+            }
+          }}
+        >
           <div className="flex items-center">
-            <div className="bg-emerald-100 p-2 rounded-lg mr-4">
-              <Database className="h-6 w-6 text-emerald-600" />
-            </div>
-            <h3 className="text-xl font-semibold text-gray-800">Connected Platforms</h3>
+            {isExpanded ? (
+              <ChevronDown className="h-3.5 w-3.5 text-gray-500 mr-1" />
+            ) : (
+              <ChevronRight className="h-3.5 w-3.5 text-gray-500 mr-1" />
+            )}
+            <span className="text-xs font-semibold text-gray-500 tracking-wider uppercase">Connected Platforms</span>
           </div>
-          <Button
-            onClick={() => setIsModalOpen(true)}
-            variant="outline"
-            size="sm"
-            className="bg-white border-emerald-200 text-emerald-700 hover:bg-emerald-50"
-          >
-            <Plus className="h-4 w-4 mr-1" />
-            Add Connection
-          </Button>
-        </div>
-        <p className="text-gray-600 mb-4">
-          SageBase connects to all your team's knowledge platforms, bringing information together in one unified
-          workspace.
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {connectedPlatforms.map((platform) => (
-            <div
-              key={platform.id}
-              className="flex items-center bg-white rounded-full px-3 py-1 text-sm border border-emerald-100"
+          <div className="flex items-center">
+            <button
+              className="p-1 rounded-full hover:bg-gray-200 opacity-0 group-hover:opacity-100 transition-opacity"
+              onClick={(e) => {
+                e.stopPropagation()
+                setIsModalOpen(true)
+              }}
+              aria-label="Add platform"
             >
-              {platform.icon}
-              <span className="ml-1.5">{platform.name}</span>
-            </div>
-          ))}
+              <Plus className="h-3.5 w-3.5 text-gray-500" />
+            </button>
+          </div>
         </div>
+
+        {/* Content - Only visible when expanded */}
+        {isExpanded && (
+          <div id="connected-platforms-content" className="mt-1 space-y-1">
+            {connectedPlatforms.map((platform) => (
+              <div
+                key={platform.id}
+                className="flex items-center py-1.5 px-3 text-gray-700 hover:bg-gray-100 rounded-md cursor-pointer"
+              >
+                {platform.icon}
+                <span className="ml-2 text-sm">{platform.name}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
